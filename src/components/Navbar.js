@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
@@ -6,13 +6,17 @@ function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
+  const handleSearch = useCallback((e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery(''); // Clear the search input after searching
     }
-  };
+  }, [searchQuery, navigate]);
+
+  const handleSearchChange = useCallback((e) => {
+    setSearchQuery(e.target.value);
+  }, []);
 
   return (
     <nav className="bg-gray-800 shadow-lg sticky top-0 z-50">
@@ -27,13 +31,15 @@ function Navbar() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 placeholder="Search movies by title, genre, or keywords..."
                 className="w-full px-4 py-2 pl-10 pr-4 rounded-full bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Search movies"
               />
               <button
                 type="submit"
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                aria-label="Submit search"
               >
                 <MagnifyingGlassIcon className="h-5 w-5" />
               </button>
@@ -44,12 +50,14 @@ function Navbar() {
             <Link
               to="/"
               className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              aria-label="Home"
             >
               Home
             </Link>
             <Link
               to="/search"
               className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              aria-label="Browse movies"
             >
               Browse
             </Link>

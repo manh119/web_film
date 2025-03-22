@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 
 function Search() {
@@ -7,8 +7,8 @@ function Search() {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Mock movie data
-  const allMovies = [
+  // Mock movie data - memoized to prevent unnecessary recreations
+  const allMovies = useMemo(() => [
     {
       id: 1,
       title: "The Adventure Begins",
@@ -49,13 +49,17 @@ function Search() {
       overview: "An action-packed thriller that will keep you on the edge of your seat.",
       genres: ["Action", "Thriller"]
     }
-  ];
+  ], []); // Empty dependency array since this data is static
 
   useEffect(() => {
+    let isMounted = true;
+
     const performSearch = () => {
       setLoading(true);
       // Simulate API delay
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
+        if (!isMounted) return;
+
         const results = allMovies.filter(movie => {
           const searchTerm = query.toLowerCase();
           return (
@@ -67,14 +71,23 @@ function Search() {
         setSearchResults(results);
         setLoading(false);
       }, 500);
+
+      return () => clearTimeout(timeoutId);
     };
 
     if (query) {
-      performSearch();
+      const cleanup = performSearch();
+      return () => {
+        cleanup?.();
+      };
     } else {
       setSearchResults([]);
     }
-  }, [query]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [query, allMovies]); // Added allMovies to dependencies
 
   return (
     <div className="container mx-auto px-4 py-8">
